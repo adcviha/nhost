@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quarterly Analysis Dashboard</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background-color: #0b0b0b; /* Deep black-grey */
+            overflow: hidden;
+        }
+
+        /* NATIVE 800x600 CONTAINER */
+        #game-wrapper {
+            width: 800px;
+            height: 600px;
+            background: #000;
+            transition: width 0.15s, height 0.15s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        #ruffle-player { width: 100%; height: 100%; }
+
+        .ui { margin-top: 20px; }
+        
+        button {
+            background: #1a1a1a; color: #555; border: 1px solid #333;
+            padding: 8px 16px; cursor: pointer; font-family: monospace;
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        button:hover { color: #fff; border-color: #666; }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <div id="ruffle-player"></div>
+    </div>
+
+    <div class="ui">
+        <button id="zoom-btn" onclick="toggleZoom()">Toggle 2X Scale</button>
+    </div>
+
+    <script src="ruffle.js"></script>
+
+    <script>
+        window.RufflePlayer = window.RufflePlayer || {};
+        window.addEventListener("load", () => {
+            const ruffle = window.RufflePlayer.newest();
+            const player = ruffle.createPlayer();
+            const container = document.getElementById("ruffle-player");
+            container.appendChild(player);
+            
+            player.load({
+                url: "n.swf",
+                allowScriptAccess: true,
+                scale: "showAll",
+                quality: "high",
+                letterbox: "on"
+            });
+        });
+
+        let isLarge = false;
+        function toggleZoom() {
+            const wrapper = document.getElementById("game-wrapper");
+            const btn = document.getElementById("zoom-btn");
+            if (!isLarge) {
+                wrapper.style.width = "1600px";
+                wrapper.style.height = "1200px";
+                btn.innerText = "Back to 1X Native";
+                isLarge = true;
+            } else {
+                wrapper.style.width = "800px";
+                wrapper.style.height = "600px";
+                btn.innerText = "Toggle 2X Scale";
+                isLarge = false;
+            }
+        }
+    </script>
+</body>
+</html>
