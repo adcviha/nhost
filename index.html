@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>N</title>
+    <title>N-Host Native</title>
     <style>
-        /* Black out the whole browser and center the game */
+        /* This makes the background a void so you don't see the "edges" */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             display: flex; justify-content: center; align-items: center;
             background-color: #000; overflow: hidden;
         }
 
-        /* LOCKED RESOLUTION: This stops the white lines/scaling glitches */
+        /* We remove the fixed 800x600 here so it doesn't "crush" the canvas */
         #ruffle {
-            width: 1200px;
-            height: 800px;
-            background-color: #000;
+            width: 100vw;
+            height: 100vh;
+            max-width: 800px; /* Only limit the width */
+            max-height: 525px; /* The real height of N v2.0 */
         }
     </style>
 </head>
@@ -33,10 +34,13 @@
             
             player.load({
                 url: "N.swf",
-                // SCALE: "EXACTFIT" forces it to stay 800x600 perfectly
-                scale: "exactFit", 
-                quality: "high",
-                wmode: "opaque"
+                // This forces Ruffle to stop trying to "fit" the game
+                scale: "noscale", 
+                padding: 0,
+                allowScriptAccess: true,
+                // These two lines prevent the "inverse scaling" glitch
+                forceScale: false,
+                forceLetterbox: false
             });
         });
     </script>
