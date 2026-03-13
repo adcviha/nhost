@@ -1,46 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>N-Host Final</title>
+    <title>N-Host Private</title>
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            display: flex; justify-content: center; align-items: center;
-            background-color: #000; overflow: hidden;
-        }
-
-        /* THE SLEDGEHAMMER: This overrides Ruffle's internal 550x400 limit */
-        ruffle-player {
-            width: 800px !important;
-            height: 525px !important; /* Adjusted to N's likely real height */
-            display: block !important;
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; overflow: hidden; }
+        
+        /* This creates a perfectly centered 800x600 window */
+        iframe {
+            border: none;
+            width: 800px;
+            height: 600px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
 
-    <ruffle-player id="ruffle"></ruffle-player>
+    <iframe src="https://ruffle.rs/demo/?file=https://adcviha.github.io/nhost/N.swf"></iframe>
 
-    <script src="ruffle.js"></script>
-
-    <script>
-        window.RufflePlayer = window.RufflePlayer || {};
-        window.addEventListener("load", () => {
-            const ruffle = window.RufflePlayer.newest();
-            const player = ruffle.createPlayer();
-            const container = document.getElementById("ruffle");
-            
-            // We replace the placeholder with the actual player
-            container.parentNode.replaceChild(player, container);
-            
-            player.load({
-                url: "N.swf",
-                scale: "showAll",
-                quality: "high",
-                wmode: "opaque",
-                letterbox: "on"
-            });
-        });
-    </script>
 </body>
 </html>
