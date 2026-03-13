@@ -1,27 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>N Native Vector</title>
+    <title>N-Host Final</title>
     <style>
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            background-color: #000; overflow: hidden;
             display: flex; justify-content: center; align-items: center;
+            background-color: #000; overflow: hidden;
         }
 
-        /* Instead of a fixed box, we use a container that scales 
-           BUT we force the internal player to stay 1:1 */
-        #ruffle {
-            width: 100%;
-            height: 100%;
-            max-width: 800px;
-            max-height: 525px;
+        /* THE SLEDGEHAMMER: This overrides Ruffle's internal 550x400 limit */
+        ruffle-player {
+            width: 800px !important;
+            height: 525px !important; /* Adjusted to N's likely real height */
+            display: block !important;
         }
     </style>
 </head>
 <body>
 
-    <div id="ruffle"></div>
+    <ruffle-player id="ruffle"></ruffle-player>
 
     <script src="ruffle.js"></script>
 
@@ -30,17 +28,17 @@
         window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
-            document.getElementById("ruffle").appendChild(player);
+            const container = document.getElementById("ruffle");
+            
+            // We replace the placeholder with the actual player
+            container.parentNode.replaceChild(player, container);
             
             player.load({
                 url: "N.swf",
-                // SCALE: "NOSCALE" is the key for vectors. 
-                // It prevents Ruffle from trying to "fit" and failing.
-                scale: "noscale", 
-                align: "top", // N was often top-aligned in the browser
+                scale: "showAll",
                 quality: "high",
-                wmode: "transparent", 
-                letterbox: "off"
+                wmode: "opaque",
+                letterbox: "on"
             });
         });
     </script>
