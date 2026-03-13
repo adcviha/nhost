@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>N-Host Native</title>
+    <title>N Native Vector</title>
     <style>
-        /* This makes the background a void so you don't see the "edges" */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            display: flex; justify-content: center; align-items: center;
             background-color: #000; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* We remove the fixed 800x600 here so it doesn't "crush" the canvas */
+        /* Instead of a fixed box, we use a container that scales 
+           BUT we force the internal player to stay 1:1 */
         #ruffle {
-            width: 100vw;
-            height: 100vh;
-            max-width: 800px; /* Only limit the width */
-            max-height: 525px; /* The real height of N v2.0 */
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            max-height: 525px;
         }
     </style>
 </head>
@@ -34,13 +34,13 @@
             
             player.load({
                 url: "N.swf",
-                // This forces Ruffle to stop trying to "fit" the game
+                // SCALE: "NOSCALE" is the key for vectors. 
+                // It prevents Ruffle from trying to "fit" and failing.
                 scale: "noscale", 
-                padding: 0,
-                allowScriptAccess: true,
-                // These two lines prevent the "inverse scaling" glitch
-                forceScale: false,
-                forceLetterbox: false
+                align: "top", // N was often top-aligned in the browser
+                quality: "high",
+                wmode: "transparent", 
+                letterbox: "off"
             });
         });
     </script>
