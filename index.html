@@ -1,92 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Quarterly Analysis Dashboard</title>
+    <title>N-Host</title>
     <style>
+        /* Center everything and keep the screen black */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            background-color: #0b0b0b; /* Deep stealth grey */
-            color: #444; font-family: monospace;
+            display: flex; justify-content: center; align-items: center;
+            background-color: #000;
         }
 
-        /* THE CONTAINER - This is what we resize */
-        #game-container {
+        /* FIXED BOX: This will NOT change size even if you resize the window */
+        #ruffle {
             width: 800px;
             height: 600px;
-            background: #000;
-            overflow: hidden; /* This prevents the "cutoff" look */
-            position: relative;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
-
-        /* THE PLAYER - It must always be 100% of the container */
-        #ruffle-player { 
-            width: 100%; 
-            height: 100%; 
-            display: block;
-        }
-
-        .controls { margin-top: 20px; }
-        
-        button {
-            background: #111; color: #555; border: 1px solid #222;
-            padding: 10px 20px; cursor: pointer; font-size: 11px;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        button:hover { color: #eee; border-color: #444; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="ruffle-player"></div>
-    </div>
-
-    <div class="controls">
-        <button id="scale-btn" onclick="toggleScale()">Toggle 2x Scale</button>
-    </div>
+    <div id="ruffle"></div>
 
     <script src="ruffle.js"></script>
 
     <script>
-        let isLarge = false;
-
         window.RufflePlayer = window.RufflePlayer || {};
-        window.addEventListener("load", () => {
+        window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
-            const container = document.getElementById("ruffle-player");
-            container.appendChild(player);
+            document.getElementById("ruffle").appendChild(player);
             
             player.load({
-                url: "N.swf", 
-                allowScriptAccess: true,
-                scale: "showAll",   // Forces the whole game to fit inside the box
-                letterbox: "on",    // Adds black bars if the ratio is slightly off
-                quality: "high"
+                url: "N.swf",
+                scale: "showAll",
+                quality: "high",
+                letterbox: "on"
             });
         });
-
-        function toggleScale() {
-            const container = document.getElementById("game-container");
-            const btn = document.getElementById("scale-btn");
-            
-            if (!isLarge) {
-                container.style.width = "1600px";
-                container.style.height = "1200px";
-                btn.innerText = "Back to 1x Native";
-                isLarge = true;
-            } else {
-                container.style.width = "800px";
-                container.style.height = "600px";
-                btn.innerText = "Toggle 2x Scale";
-                isLarge = false;
-            }
-        }
     </script>
+
 </body>
 </html>
