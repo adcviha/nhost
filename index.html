@@ -8,44 +8,53 @@
             margin: 0; padding: 0; width: 100%; height: 100%; 
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            background-color: #0b0b0b; /* Deep black-grey */
-            overflow: hidden;
+            background-color: #0b0b0b; /* Deep stealth grey */
+            color: #444; font-family: monospace;
         }
 
-        /* NATIVE 800x600 CONTAINER */
-        #game-wrapper {
+        /* THE CONTAINER - This is what we resize */
+        #game-container {
             width: 800px;
             height: 600px;
             background: #000;
-            transition: width 0.15s, height 0.15s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            overflow: hidden; /* This prevents the "cutoff" look */
+            position: relative;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
-        #ruffle-player { width: 100%; height: 100%; }
+        /* THE PLAYER - It must always be 100% of the container */
+        #ruffle-player { 
+            width: 100%; 
+            height: 100%; 
+            display: block;
+        }
 
-        .ui { margin-top: 20px; }
+        .controls { margin-top: 20px; }
         
         button {
-            background: #1a1a1a; color: #555; border: 1px solid #333;
-            padding: 8px 16px; cursor: pointer; font-family: monospace;
-            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            background: #111; color: #555; border: 1px solid #222;
+            padding: 10px 20px; cursor: pointer; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        button:hover { color: #fff; border-color: #666; }
+        button:hover { color: #eee; border-color: #444; }
     </style>
 </head>
 <body>
 
-    <div id="game-wrapper">
+    <div id="game-container">
         <div id="ruffle-player"></div>
     </div>
 
-    <div class="ui">
-        <button id="zoom-btn" onclick="toggleZoom()">Toggle 2X Scale</button>
+    <div class="controls">
+        <button id="scale-btn" onclick="toggleScale()">Toggle 2x Scale</button>
     </div>
 
     <script src="ruffle.js"></script>
 
     <script>
+        let isLarge = false;
+
         window.RufflePlayer = window.RufflePlayer || {};
         window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
@@ -54,27 +63,27 @@
             container.appendChild(player);
             
             player.load({
-                url: "N.swf",
+                url: "N.swf", 
                 allowScriptAccess: true,
-                scale: "showAll",
-                quality: "high",
-                letterbox: "on"
+                scale: "showAll",   // Forces the whole game to fit inside the box
+                letterbox: "on",    // Adds black bars if the ratio is slightly off
+                quality: "high"
             });
         });
 
-        let isLarge = false;
-        function toggleZoom() {
-            const wrapper = document.getElementById("game-wrapper");
-            const btn = document.getElementById("zoom-btn");
+        function toggleScale() {
+            const container = document.getElementById("game-container");
+            const btn = document.getElementById("scale-btn");
+            
             if (!isLarge) {
-                wrapper.style.width = "1600px";
-                wrapper.style.height = "1200px";
-                btn.innerText = "Back to 1X Native";
+                container.style.width = "1600px";
+                container.style.height = "1200px";
+                btn.innerText = "Back to 1x Native";
                 isLarge = true;
             } else {
-                wrapper.style.width = "800px";
-                wrapper.style.height = "600px";
-                btn.innerText = "Toggle 2X Scale";
+                container.style.width = "800px";
+                container.style.height = "600px";
+                btn.innerText = "Toggle 2x Scale";
                 isLarge = false;
             }
         }
