@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>N-Host Native</title>
+    <title>N</title>
     <style>
+        /* Black out the whole browser and center the game */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             display: flex; justify-content: center; align-items: center;
             background-color: #000; overflow: hidden;
         }
 
-        /* We set the box to be slightly larger than 800x600 
-           to ensure no scrollbars or "cutoff" edges ever appear. */
+        /* LOCKED RESOLUTION: This stops the white lines/scaling glitches */
         #ruffle {
-            width: 805px;
-            height: 605px;
+            width: 800px;
+            height: 600px;
+            background-color: #000;
         }
     </style>
 </head>
@@ -25,23 +26,19 @@
 
     <script>
         window.RufflePlayer = window.RufflePlayer || {};
-        window.addEventListener("DOMContentLoaded", () => {
+        window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             document.getElementById("ruffle").appendChild(player);
             
             player.load({
                 url: "N.swf",
-                // This is the magic fix for "Cutoff"
-                scale: "noscale", 
-                forceScale: false,
-                letterbox: "off",
-                // This centers the game inside the 800x600 box
-                align: "center", 
-                quality: "high"
+                // SCALE: "EXACTFIT" forces it to stay 800x600 perfectly
+                scale: "exactFit", 
+                quality: "high",
+                wmode: "opaque"
             });
         });
     </script>
-
 </body>
 </html>
