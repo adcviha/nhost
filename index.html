@@ -18,18 +18,18 @@
         }
 
         #game-container {
-            /* Locking to the exact native resolution */
             width: 800px;
             height: 600px;
             
-            /* Keeping the pixels hard and sharp when scaled up for 4K */
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
             image-rendering: pixelated;
-            
             transform-origin: center center;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+
+            /* --- THE THICKNESS HACK --- */
+            /* This adds a tiny 0.5px "stroke" around every dark object.
+               It makes the ninja and the UI fonts feel significantly more 'beefy'
+               and closer to the desktop original. */
+            filter: drop-shadow(0.5px 0px 0px #000) drop-shadow(-0.5px 0px 0px #000);
         }
 
         ruffle-player {
