@@ -2,33 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N - Way of the Ninja</title>
+    <title>N - Way of the Ninja (Stable Build)</title>
     <style>
+        /* 1. Deep Black Background for focus */
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: #000;
+            display: flex; justify-content: center; align-items: center;
             overflow: hidden;
         }
 
+        /* 2. Strict 800x600 Container 
+           We use translateZ(0) to force the GPU to handle this layer separately.
+        */
         #game-container {
-            /* True native resolution */
             width: 800px;
             height: 600px;
-            
-            /* No filters, just clean pixel scaling */
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-            image-rendering: pixelated;
-            
+            image-rendering: pixelated; 
             transform-origin: center center;
+            will-change: transform;
+            transform: translateZ(0); 
         }
 
         ruffle-player {
@@ -43,59 +37,55 @@
     <div id="game-container"></div>
 
     <script>
+        // --- THE "STABILITY AT ALL COSTS" CONFIG ---
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
-            autoplay: "on",
-            unmuteOverlay: "visible",
+            "autoplay": "on",
+            "unmuteOverlay": "visible",
             
-            // THE COLOR & PERFORMANCE FIX:
-            // 1. We go back to 'high' quality so the colors and lines are perfect.
-            // 2. We use 'forceScaleFactor: 1' so Ruffle doesn't try to render at 4K.
-            // 3. 'wmode: direct' restores the original Flash color space.
-            quality: "high", 
-            forceScaleFactor: 1, 
-            wmode: "direct",
+            // LOW QUALITY: This is the only way to stop the lag.
+            // It stops Ruffle from trying to smooth out every vector line,
+            // which frees up the CPU to run the actual game code.
+            "quality": "low", 
             
-            letterbox: "on",
-            contextMenu: "on"
+            // WMODE TRANSPARENT: Often the most stable for browser-to-Flash 
+            // communication (prevents the menu-click freeze).
+            "wmode": "transparent",
+            
+            "powerContext": "high-performance",
+            "forceScaleFactor": 1, 
+            "letterbox": "on",
+            "warnOnUnsupportedContent": false
         };
     </script>
 
     <script src="ruffle.js"></script>
 
     <script>
+        // --- INTEGER SCALING (NO SEAMS) ---
         const baseWidth = 800;
         const baseHeight = 600;
         const container = document.getElementById("game-container");
 
         function applyIntegerScale() {
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-
-            const scaleX = Math.floor(windowWidth / baseWidth);
-            const scaleY = Math.floor(windowHeight / baseHeight);
-            
+            const scaleX = Math.floor(window.innerWidth / baseWidth);
+            const scaleY = Math.floor(window.innerHeight / baseHeight);
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
-
-            container.style.transform = `scale(${optimalScale})`;
+            container.style.transform = `scale(${optimalScale}) translateZ(0)`;
         }
 
         window.addEventListener("resize", applyIntegerScale);
         applyIntegerScale();
 
+        // --- LOAD GAME ---
         window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             container.appendChild(player);
-
             player.load({
                 url: "N.swf",
                 allowScriptAccess: true
-            }).then(() => {
-                console.info("N.swf loaded successfully with color fix.");
-            }).catch((error) => {
-                console.error("Load error:", error);
             });
         });
     </script>
