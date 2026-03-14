@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N - Way of the Ninja</title>
     <style>
-        /* Pure, distraction-free layout */
         html, body {
             margin: 0;
             padding: 0;
@@ -19,11 +18,17 @@
         }
 
         #game-container {
+            /* True native resolution */
             width: 800px;
             height: 600px;
-            image-rendering: pixelated; /* Keeps it sharp on 4K */
+            
+            /* No filters, just clean pixel scaling */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            
             transform-origin: center center;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
         }
 
         ruffle-player {
@@ -42,13 +47,16 @@
         window.RufflePlayer.config = {
             autoplay: "on",
             unmuteOverlay: "visible",
-            quality: "low", 
+            
+            // THE COLOR & PERFORMANCE FIX:
+            // 1. We go back to 'high' quality so the colors and lines are perfect.
+            // 2. We use 'forceScaleFactor: 1' so Ruffle doesn't try to render at 4K.
+            // 3. 'wmode: direct' restores the original Flash color space.
+            quality: "high", 
+            forceScaleFactor: 1, 
+            wmode: "direct",
+            
             letterbox: "on",
-            /* STABILITY FIX: Switching to 'opaque' helps prevent the ActionScript 
-               engine from hanging during heavy menu transitions.
-            */
-            wmode: "opaque",
-            powerContext: "high-performance",
             contextMenu: "on"
         };
     </script>
@@ -63,10 +71,10 @@
         function applyIntegerScale() {
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
-            
-            // Standard integer scaling math
+
             const scaleX = Math.floor(windowWidth / baseWidth);
             const scaleY = Math.floor(windowHeight / baseHeight);
+            
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
 
@@ -83,15 +91,13 @@
 
             player.load({
                 url: "N.swf",
-                /* Allowing Script Access can help with SharedObject (Save Data) 
-                   stability, which is often what causes menu freezes.
-                */
-                allowScriptAccess: true 
+                allowScriptAccess: true
             }).then(() => {
-                console.info("N.swf loaded.");
-            }).catch((e) => console.error(e));
+                console.info("N.swf loaded successfully with color fix.");
+            }).catch((error) => {
+                console.error("Load error:", error);
+            });
         });
     </script>
-
 </body>
 </html>
