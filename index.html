@@ -10,7 +10,7 @@
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #111; /* Slightly softer black to reduce eye strain */
+            background-color: #111; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,20 +18,16 @@
         }
 
         #game-container {
-            /* We lock to the true native SWF resolution */
+            /* Locking to the exact native resolution */
             width: 800px;
             height: 600px;
             
-            /* * THE MAGIC SAUCE FOR 4K:
-             * This tells the browser: "When you scale this up, do NOT blur it. 
-             * Keep the pixels hard and sharp."
-             */
+            /* Keeping the pixels hard and sharp when scaled up for 4K */
             image-rendering: -moz-crisp-edges;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             image-rendering: pixelated;
             
-            /* Prepare for JS scaling from the exact center */
             transform-origin: center center;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
         }
@@ -48,11 +44,18 @@
     <div id="game-container"></div>
 
     <script>
+        // --- PRE-CONFIGURE RUFFLE ---
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             autoplay: "on",
             unmuteOverlay: "visible",
-            quality: "high", 
+            
+            // THE PERFORMANCE FIX:
+            // This disables Ruffle's internal vector anti-aliasing.
+            // It saves massive CPU/GPU power to prevent the "bullet time" slowdown,
+            // but the game still looks crisp because our CSS is handling the upscaling!
+            quality: "low", 
+            
             letterbox: "on",
             wmode: "direct",
             contextMenu: "on"
@@ -62,11 +65,7 @@
     <script src="ruffle.js"></script>
 
     <script>
-        // --- INTEGER SCALING LOGIC ---
-        // This ensures the game scales up to fit your 4K screen, but strictly
-        // in whole numbers (1x, 2x, 3x, 4x) so the vector edges never land on a fraction.
-        // This prevents the "seam lines" AND keeps the ninja incredibly sharp.
-
+        // --- 4K INTEGER SCALING LOGIC ---
         const baseWidth = 800;
         const baseHeight = 600;
         const container = document.getElementById("game-container");
@@ -75,21 +74,16 @@
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
 
-            // Calculate the maximum whole number the game can be multiplied by to fit the screen
             const scaleX = Math.floor(windowWidth / baseWidth);
             const scaleY = Math.floor(windowHeight / baseHeight);
             
-            // Pick the smaller scale so it doesn't clip off the screen. 
-            // Default to 1 if the window is tiny.
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
 
-            // Apply the exact integer scale
             container.style.transform = `scale(${optimalScale})`;
             console.log(`Scaling game by ${optimalScale}x`);
         }
 
-        // Run the math on load and whenever you resize the browser window
         window.addEventListener("resize", applyIntegerScale);
         applyIntegerScale();
 
