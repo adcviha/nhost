@@ -5,38 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>N - Way of the Ninja</title>
     <style>
+        /* Pure, distraction-free layout */
         html, body {
             margin: 0;
             padding: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #111; 
+            background-color: #000; 
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
         }
 
-       #game-container {
+        #game-container {
             width: 800px;
             height: 600px;
-            
-            /* Sharp pixel edges for 4K */
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-            image-rendering: pixelated;
-            
+            image-rendering: pixelated; /* Keeps it sharp on 4K */
             transform-origin: center center;
-
-            /* --- THE "BEEF UP" FILTER --- 
-               1. Contrast(1.2): Makes the black lines "grab" more of the edge pixels.
-               2. Brightness(0.9): Darkens the mid-tones so the thin lines don't wash out.
-               3. Saturate(1.1): Makes the gold and purple bar pop just a bit more.
-            */
-            filter: contrast(2.5) brightness(0.9) saturate(1.1);
-            
-            box-shadow: 0 0 40px rgba(0, 0, 0, 1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
         }
 
         ruffle-player {
@@ -51,20 +38,17 @@
     <div id="game-container"></div>
 
     <script>
-        // --- PRE-CONFIGURE RUFFLE ---
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             autoplay: "on",
             unmuteOverlay: "visible",
-            
-            // THE PERFORMANCE FIX:
-            // This disables Ruffle's internal vector anti-aliasing.
-            // It saves massive CPU/GPU power to prevent the "bullet time" slowdown,
-            // but the game still looks crisp because our CSS is handling the upscaling!
             quality: "low", 
-            
             letterbox: "on",
-            wmode: "direct",
+            /* STABILITY FIX: Switching to 'opaque' helps prevent the ActionScript 
+               engine from hanging during heavy menu transitions.
+            */
+            wmode: "opaque",
+            powerContext: "high-performance",
             contextMenu: "on"
         };
     </script>
@@ -72,7 +56,6 @@
     <script src="ruffle.js"></script>
 
     <script>
-        // --- 4K INTEGER SCALING LOGIC ---
         const baseWidth = 800;
         const baseHeight = 600;
         const container = document.getElementById("game-container");
@@ -80,36 +63,33 @@
         function applyIntegerScale() {
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
-
+            
+            // Standard integer scaling math
             const scaleX = Math.floor(windowWidth / baseWidth);
             const scaleY = Math.floor(windowHeight / baseHeight);
-            
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
 
             container.style.transform = `scale(${optimalScale})`;
-            console.log(`Scaling game by ${optimalScale}x`);
         }
 
         window.addEventListener("resize", applyIntegerScale);
         applyIntegerScale();
 
-
-        // --- RUFFLE INITIALIZATION ---
         window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
-            
             container.appendChild(player);
 
             player.load({
                 url: "N.swf",
-                allowScriptAccess: false
+                /* Allowing Script Access can help with SharedObject (Save Data) 
+                   stability, which is often what causes menu freezes.
+                */
+                allowScriptAccess: true 
             }).then(() => {
-                console.info("N.swf loaded successfully.");
-            }).catch((error) => {
-                console.error("Failed to load N.swf:", error);
-            });
+                console.info("N.swf loaded.");
+            }).catch((e) => console.error(e));
         });
     </script>
 
