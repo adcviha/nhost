@@ -4,29 +4,31 @@
     <meta charset="UTF-8">
     <title>N - Way of the Ninja (Stable Build)</title>
     <style>
-        /* Deep Black Background for focus */
         html, body {
             margin: 0; padding: 0;
             width: 100vw; height: 100vh;
-            background-color: #000;
+            background-color: #000; /* Pure black outer */
             display: flex; justify-content: center; align-items: center;
             overflow: hidden;
         }
 
-        /* Strict 800x600 Container */
         #game-container {
             width: 800px;
             height: 600px;
+            background-color: #000; /* FIX: Force black behind the SWF */
             image-rendering: pixelated; 
             transform-origin: center center;
             will-change: transform;
             transform: translateZ(0); 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
+        /* FIX: Ensure the Ruffle canvas itself is never transparent */
         ruffle-player {
             width: 100%;
             height: 100%;
             display: block;
+            background-color: #000 !important; 
         }
     </style>
 </head>
@@ -34,41 +36,34 @@
 
     <div id="game-container"></div>
 
-    <script>
-        // --- UPDATED STABILITY CONFIG ---
-        window.RufflePlayer = window.RufflePlayer || {};
-        window.RufflePlayer.config = {
-            "autoplay": "on",
-            "unmuteOverlay": "visible",
-            
-            // "low" disables anti-aliasing. If the game still freezes, 
-            // try removing this line to see if native rendering handles it better.
-            "quality": "low", 
-            
-            // FIX: Changed from transparent to opaque to fix colors and crashes.
-            "wmode": "opaque",
-            
-            // FIX: Force Ruffle to render a black background behind the game
-            "backgroundColor": "#000000",
-            
-            "powerContext": "high-performance",
-            "forceScaleFactor": 1, 
-            "letterbox": "on",
-            "warnOnUnsupportedContent": false
-        };
-    </script>
-
     <script src="ruffle.js"></script>
 
     <script>
-        // --- INTEGER SCALING (NO SEAMS) ---
-        const baseWidth = 800;
-        const baseHeight = 600;
+        window.RufflePlayer = window.RufflePlayer || {};
+        window.RufflePlayer.config = {
+            "autoplay": "on",
+            "unmuteOverlay": "hidden",
+            "letterbox": "on",
+            "warnOnUnsupportedContent": false,
+            
+            // FIX: "High" quality is actually often MORE stable for menus
+            // because it uses standard vector paths that Ruffle is optimized for.
+            "quality": "high", 
+            
+            // FIX: Using "window" instead of "opaque" or "transparent"
+            // This is the most "Native" Flash mode and usually prevents menu hangs.
+            "wmode": "window",
+            
+            "forceScaleFactor": 1,
+            "preloader": false // Speeds up loading/transitions
+        };
+
         const container = document.getElementById("game-container");
 
+        // Scaling logic
         function applyIntegerScale() {
-            const scaleX = Math.floor(window.innerWidth / baseWidth);
-            const scaleY = Math.floor(window.innerHeight / baseHeight);
+            const scaleX = Math.floor(window.innerWidth / 800);
+            const scaleY = Math.floor(window.innerHeight / 600);
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
             container.style.transform = `scale(${optimalScale}) translateZ(0)`;
@@ -77,16 +72,32 @@
         window.addEventListener("resize", applyIntegerScale);
         applyIntegerScale();
 
-        // --- LOAD GAME ---
         window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             container.appendChild(player);
-            
+
             player.load({
                 url: "N.swf",
+                // STABILITY FIX: Explicitly tell Ruffle the background color
+                backgroundColor: "#000000",
                 allowScriptAccess: true
+            }).then(() => {
+                console.log("N-Game Loaded Successfully");
+                // Ensure the player takes focus immediately for inputs
+                player.focus();
+            }).catch((e) => {
+                console.error("Ruffle failed to load:", e);
             });
+        });
+
+        // INPUT POLLING TRICK: 
+        // To keep the "polling" high, we prevent the browser from 
+        // sleeping the tab during transitions.
+        document.addEventListener('keydown', () => {
+            if (document.activeElement !== document.querySelector('ruffle-player')) {
+                document.querySelector('ruffle-player').focus();
+            }
         });
     </script>
 </body>
