@@ -2,23 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>N - Way of the Ninja</title>
+    <title>N - Way of the Ninja (Stable Build)</title>
     <style>
+        /* 1. Deep Black Background for focus */
         html, body {
             margin: 0; padding: 0;
             width: 100vw; height: 100vh;
-            background-color: #000; /* Outer black */
+            background-color: #000;
             display: flex; justify-content: center; align-items: center;
             overflow: hidden;
         }
 
+        /* 2. Strict 800x600 Container 
+           We use translateZ(0) to force the GPU to handle this layer separately.
+        */
         #game-container {
             width: 800px;
             height: 600px;
-            /* Force the container to be black to fix the "broken" background */
-            background-color: #000 !important;
             image-rendering: pixelated; 
             transform-origin: center center;
+            will-change: transform;
+            transform: translateZ(0); 
         }
 
         ruffle-player {
@@ -32,51 +36,56 @@
 
     <div id="game-container"></div>
 
-    <script src="ruffle.js"></script>
-
     <script>
+        // --- THE "STABILITY AT ALL COSTS" CONFIG ---
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "autoplay": "on",
-            "unmuteOverlay": "hidden",
+            "unmuteOverlay": "visible",
+            
+            // LOW QUALITY: This is the only way to stop the lag.
+            // It stops Ruffle from trying to smooth out every vector line,
+            // which frees up the CPU to run the actual game code.
+            "quality": "low", 
+            
+            // WMODE TRANSPARENT: Often the most stable for browser-to-Flash 
+            // communication (prevents the menu-click freeze).
+            "wmode": "transparent",
+            
+            "powerContext": "high-performance",
+            "forceScaleFactor": 1, 
             "letterbox": "on",
-            "quality": "high",
-            // Use 'opaque' to force the player to ignore SWF transparency
-            "wmode": "opaque",
-            "base": "https://adcviha.github.io/nhost/",
             "warnOnUnsupportedContent": false
         };
+    </script>
 
+    <script src="ruffle.js"></script>
+
+    <script>
+        // --- INTEGER SCALING (NO SEAMS) ---
+        const baseWidth = 800;
+        const baseHeight = 600;
         const container = document.getElementById("game-container");
 
         function applyIntegerScale() {
-            const scaleX = Math.floor(window.innerWidth / 800);
-            const scaleY = Math.floor(window.innerHeight / 600);
+            const scaleX = Math.floor(window.innerWidth / baseWidth);
+            const scaleY = Math.floor(window.innerHeight / baseHeight);
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
-            container.style.transform = `scale(${optimalScale})`;
+            container.style.transform = `scale(${optimalScale}) translateZ(0)`;
         }
 
         window.addEventListener("resize", applyIntegerScale);
         applyIntegerScale();
 
+        // --- LOAD GAME ---
         window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             container.appendChild(player);
-
             player.load({
                 url: "N.swf",
-                // MANUALLY INJECTING THE MISSING METADATA
-                backgroundColor: "#DBDBDF",
-                forceAlign: true,
-                forceScale: true,
                 allowScriptAccess: true
-            }).then(() => {
-                // Focus hack to prevent menu input loss
-                setInterval(() => {
-                    if (document.activeElement !== player) player.focus();
-                }, 1000);
             });
         });
     </script>
