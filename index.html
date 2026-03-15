@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>N - Way of the Ninja (Stable Build)</title>
     <style>
-        /* 1. Deep Black Background for focus */
+        /* Deep Black Background for focus */
         html, body {
             margin: 0; padding: 0;
             width: 100vw; height: 100vh;
@@ -13,9 +13,7 @@
             overflow: hidden;
         }
 
-        /* 2. Strict 800x600 Container 
-           We use translateZ(0) to force the GPU to handle this layer separately.
-        */
+        /* Strict 800x600 Container */
         #game-container {
             width: 800px;
             height: 600px;
@@ -37,20 +35,21 @@
     <div id="game-container"></div>
 
     <script>
-        // --- THE "STABILITY AT ALL COSTS" CONFIG ---
+        // --- UPDATED STABILITY CONFIG ---
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "autoplay": "on",
             "unmuteOverlay": "visible",
             
-            // LOW QUALITY: This is the only way to stop the lag.
-            // It stops Ruffle from trying to smooth out every vector line,
-            // which frees up the CPU to run the actual game code.
+            // "low" disables anti-aliasing. If the game still freezes, 
+            // try removing this line to see if native rendering handles it better.
             "quality": "low", 
             
-            // WMODE TRANSPARENT: Often the most stable for browser-to-Flash 
-            // communication (prevents the menu-click freeze).
-            "wmode": "transparent",
+            // FIX: Changed from transparent to opaque to fix colors and crashes.
+            "wmode": "opaque",
+            
+            // FIX: Force Ruffle to render a black background behind the game
+            "backgroundColor": "#000000",
             
             "powerContext": "high-performance",
             "forceScaleFactor": 1, 
@@ -83,6 +82,7 @@
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
             container.appendChild(player);
+            
             player.load({
                 url: "N.swf",
                 allowScriptAccess: true
