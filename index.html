@@ -2,33 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>N - Way of the Ninja (Stable Build)</title>
+    <title>N - Way of the Ninja</title>
     <style>
-        /* 1. Deep Black Background for focus */
-        html, body {
-            margin: 0; padding: 0;
-            width: 100vw; height: 100vh;
-            background-color: #000;
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
+        /* Keep the outer area black to stay focused, but let the game be itself */
+        body { 
+            background-color: #000; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden; 
         }
-
-        /* 2. Strict 800x600 Container 
-           We use translateZ(0) to force the GPU to handle this layer separately.
-        */
-        #game-container {
-            width: 800px;
-            height: 600px;
-            image-rendering: pixelated; 
-            transform-origin: center center;
-            will-change: transform;
-            transform: translateZ(0); 
+        #game-container { 
+            width: 800px; 
+            height: 600px; 
         }
-
-        ruffle-player {
-            width: 100%;
-            height: 100%;
-            display: block;
+        ruffle-player { 
+            width: 100%; 
+            height: 100%; 
         }
     </style>
 </head>
@@ -36,57 +28,36 @@
 
     <div id="game-container"></div>
 
-    <script>
-        // --- THE "STABILITY AT ALL COSTS" CONFIG ---
-        window.RufflePlayer = window.RufflePlayer || {};
-        window.RufflePlayer.config = {
-            "autoplay": "on",
-            "unmuteOverlay": "visible",
-            
-            // LOW QUALITY: This is the only way to stop the lag.
-            // It stops Ruffle from trying to smooth out every vector line,
-            // which frees up the CPU to run the actual game code.
-            "quality": "low", 
-            
-            // WMODE TRANSPARENT: Often the most stable for browser-to-Flash 
-            // communication (prevents the menu-click freeze).
-            "wmode": "transparent",
-            
-            "powerContext": "high-performance",
-            "forceScaleFactor": 1, 
-            "letterbox": "on",
-            "warnOnUnsupportedContent": false
-        };
-    </script>
-
     <script src="ruffle.js"></script>
 
     <script>
-        // --- INTEGER SCALING (NO SEAMS) ---
-        const baseWidth = 800;
-        const baseHeight = 600;
-        const container = document.getElementById("game-container");
+        window.RufflePlayer = window.RufflePlayer || {};
+        window.RufflePlayer.config = {
+            "autoplay": "on",
+            "unmuteOverlay": "hidden",
+            "letterbox": "on",
+            
+            /* MAX PERFORMANCE: Disables vector smoothing/anti-aliasing */
+            "quality": "low", 
+            
+            /* STABILITY: Opaque is the standard for non-glitchy menuing */
+            "wmode": "opaque", 
+            
+            "warnOnUnsupportedContent": false
+        };
 
-        function applyIntegerScale() {
-            const scaleX = Math.floor(window.innerWidth / baseWidth);
-            const scaleY = Math.floor(window.innerHeight / baseHeight);
-            let optimalScale = Math.min(scaleX, scaleY);
-            if (optimalScale < 1) optimalScale = 1; 
-            container.style.transform = `scale(${optimalScale}) translateZ(0)`;
-        }
-
-        window.addEventListener("resize", applyIntegerScale);
-        applyIntegerScale();
-
-        // --- LOAD GAME ---
         window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
-            container.appendChild(player);
+            document.getElementById("game-container").appendChild(player);
+            
             player.load({
                 url: "N.swf",
                 allowScriptAccess: true
             });
+
+            // Keep focus on the game so inputs don't drop
+            player.addEventListener("mousedown", () => player.focus());
         });
     </script>
 </body>
