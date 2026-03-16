@@ -2,28 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>N - Way of the Ninja (Pixel Perfect)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N - Way of the Ninja</title>
     <style>
+        /* Keep everything centered and clean with a black background */
         html, body {
-            margin: 0; padding: 0;
-            width: 100vw; height: 100vh;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: #000;
-            display: flex; justify-content: center; align-items: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
 
+        /* Lock to the exact original resolution of N */
         #game-container {
             width: 800px;
             height: 600px;
-            /* CRITICAL: Keep pixelated rendering to avoid smoothing the "bevel" */
-            image-rendering: pixelated;
-            transform-origin: center center;
         }
 
+        /* Make the Ruffle player fill the fixed container */
         ruffle-player {
             width: 100%;
             height: 100%;
-            display: block;
+            /* Disable interpolation to speed up rendering */
+            image-rendering: pixelated; 
         }
     </style>
 </head>
@@ -32,57 +38,35 @@
     <div id="game-container"></div>
 
     <script>
-        // Force 1:1 Pixel Ratio to stop the "Shadowing" leak
-        Object.defineProperty(window, 'devicePixelRatio', {
-            get: function() { return 1; }
-        });
-
+        // Ruffle Configuration optimized for pure performance
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "autoplay": "on",
-            "unmuteOverlay": "hidden",
-            "quality": "low",
-            "wmode": "direct",
-            
-            /* --- THE BEVEL FIX --- */
-            "letterbox": "off",     // Prevents Ruffle from adding its own black bars
-            "scale": "noScale",     // Stops the internal Flash engine from stretching
-            "salign": "tl",         // Anchors coordinates to Top-Left (prevents sub-pixel drift)
-            "forceScaleFactor": 1, 
-            "forceAlign": true
+            "unmuteOverlay": "hidden",   // Hides the "click to unmute" screen, auto-starts immediately
+            "backgroundColor": "#DBDBDF",
+            "letterbox": "on",           // Ensures aspect ratio is strictly maintained
+            "quality": "low",            // CRITICAL FOR PERFORMANCE: Disables vector anti-aliasing for raw speed
+            "warnOnUnsupportedContent": false,
+            "showSwfDownload": false,
+            "contextMenu": "off"         // Disables the right-click menu to save slight overhead
         };
     </script>
 
     <script src="ruffle.js"></script>
 
     <script>
-        const baseWidth = 800;
-        const baseHeight = 600;
-        const container = document.getElementById("game-container");
-
-        function applyIntegerScale() {
-            const scaleX = Math.floor(window.innerWidth / baseWidth);
-            const scaleY = Math.floor(window.innerHeight / baseHeight);
-            let optimalScale = Math.min(scaleX, scaleY);
-            if (optimalScale < 1) optimalScale = 1; 
-
-            // Using floor on the centering to ensure no sub-pixel placement
-            container.style.transform = `scale(${optimalScale})`;
-        }
-
-        window.addEventListener("resize", applyIntegerScale);
-        applyIntegerScale();
-
-        window.addEventListener("DOMContentLoaded", () => {
+        // Initialize Ruffle and load the SWF once the page is ready
+        window.addEventListener("load", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
+            const container = document.getElementById("game-container");
+            
             container.appendChild(player);
             
-            player.load({
-                url: "N.swf",
-                allowScriptAccess: true
-            });
+            // Load your specific game file
+            player.load("N.swf");
         });
     </script>
+
 </body>
 </html>
