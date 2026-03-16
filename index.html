@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>N - Way of the Ninja (60FPS Stable)</title>
+    <title>N - Way of the Ninja (Pixel Perfect)</title>
     <style>
         html, body {
             margin: 0; padding: 0;
@@ -10,19 +10,14 @@
             background-color: #000;
             display: flex; justify-content: center; align-items: center;
             overflow: hidden;
-            /* Disables browser "bounce" and touch delays */
-            touch-action: none;
         }
 
         #game-container {
-            /* Hard-locked 800x600 buffer */
             width: 800px;
             height: 600px;
+            /* CRITICAL: Keep pixelated rendering to avoid smoothing the "bevel" */
             image-rendering: pixelated;
             transform-origin: center center;
-            /* Force GPU layer separation to prevent compositor lag */
-            will-change: transform;
-            backface-visibility: hidden;
         }
 
         ruffle-player {
@@ -37,11 +32,7 @@
     <div id="game-container"></div>
 
     <script>
-        // --- 60FPS STABILITY TRICKS ---
-        
-        // 1. Force the browser to treat 4K as 1:1. 
-        // This stops the "Memory Leak" by preventing the canvas from 
-        // bloating to 4K internal resolutions.
+        // Force 1:1 Pixel Ratio to stop the "Shadowing" leak
         Object.defineProperty(window, 'devicePixelRatio', {
             get: function() { return 1; }
         });
@@ -50,13 +41,15 @@
         window.RufflePlayer.config = {
             "autoplay": "on",
             "unmuteOverlay": "hidden",
-            "quality": "low", // Essential for 60fps physics stability
+            "quality": "low",
             "wmode": "direct",
-            "letterbox": "on",
+            
+            /* --- THE BEVEL FIX --- */
+            "letterbox": "off",     // Prevents Ruffle from adding its own black bars
+            "scale": "noScale",     // Stops the internal Flash engine from stretching
+            "salign": "tl",         // Anchors coordinates to Top-Left (prevents sub-pixel drift)
             "forceScaleFactor": 1, 
-            "powerContext": "high-performance",
-            // Prevents Ruffle from "thinking" too much about high-res textures
-            "maxCanvasPixels": 480000 
+            "forceAlign": true
         };
     </script>
 
@@ -68,14 +61,13 @@
         const container = document.getElementById("game-container");
 
         function applyIntegerScale() {
-            // Perfect integer scaling for 4K
             const scaleX = Math.floor(window.innerWidth / baseWidth);
             const scaleY = Math.floor(window.innerHeight / baseHeight);
             let optimalScale = Math.min(scaleX, scaleY);
             if (optimalScale < 1) optimalScale = 1; 
 
-            // Use translate3d to trigger hardware acceleration
-            container.style.transform = `scale(${optimalScale}) translate3d(0,0,0)`;
+            // Using floor on the centering to ensure no sub-pixel placement
+            container.style.transform = `scale(${optimalScale})`;
         }
 
         window.addEventListener("resize", applyIntegerScale);
@@ -89,13 +81,6 @@
             player.load({
                 url: "N.swf",
                 allowScriptAccess: true
-            }).then(() => {
-                // Final hard-lock on the rendering canvas
-                const canvas = container.querySelector('canvas');
-                if (canvas) {
-                    canvas.style.width = "800px";
-                    canvas.style.height = "600px";
-                }
             });
         });
     </script>
