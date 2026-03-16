@@ -2,25 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>N - Way of the Ninja</title>
+    <title>N - Way of the Ninja (60FPS Stable)</title>
     <style>
-        /* Keep the outer area black to stay focused, but let the game be itself */
-        body { 
-            background-color: #000; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            overflow: hidden; 
+        html, body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: #000;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+            /* Disables browser "bounce" and touch delays */
+            touch-action: none;
         }
-        #game-container { 
-            width: 800px; 
-            height: 600px; 
+
+        #game-container {
+            /* Hard-locked 800x600 buffer */
+            width: 800px;
+            height: 600px;
+            image-rendering: pixelated;
+            transform-origin: center center;
+            /* Force GPU layer separation to prevent compositor lag */
+            will-change: transform;
+            backface-visibility: hidden;
         }
-        ruffle-player { 
-            width: 100%; 
-            height: 100%; 
+
+        ruffle-player {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
     </style>
 </head>
@@ -28,36 +36,67 @@
 
     <div id="game-container"></div>
 
-    <script src="ruffle.js"></script>
-
     <script>
+        // --- 60FPS STABILITY TRICKS ---
+        
+        // 1. Force the browser to treat 4K as 1:1. 
+        // This stops the "Memory Leak" by preventing the canvas from 
+        // bloating to 4K internal resolutions.
+        Object.defineProperty(window, 'devicePixelRatio', {
+            get: function() { return 1; }
+        });
+
         window.RufflePlayer = window.RufflePlayer || {};
         window.RufflePlayer.config = {
             "autoplay": "on",
             "unmuteOverlay": "hidden",
+            "quality": "low", // Essential for 60fps physics stability
+            "wmode": "direct",
             "letterbox": "on",
-            
-            /* MAX PERFORMANCE: Disables vector smoothing/anti-aliasing */
-            "quality": "low", 
-            
-            /* STABILITY: Opaque is the standard for non-glitchy menuing */
-            "wmode": "opaque", 
-            
-            "warnOnUnsupportedContent": false
+            "forceScaleFactor": 1, 
+            "powerContext": "high-performance",
+            // Prevents Ruffle from "thinking" too much about high-res textures
+            "maxCanvasPixels": 480000 
         };
+    </script>
+
+    <script src="ruffle.js"></script>
+
+    <script>
+        const baseWidth = 800;
+        const baseHeight = 600;
+        const container = document.getElementById("game-container");
+
+        function applyIntegerScale() {
+            // Perfect integer scaling for 4K
+            const scaleX = Math.floor(window.innerWidth / baseWidth);
+            const scaleY = Math.floor(window.innerHeight / baseHeight);
+            let optimalScale = Math.min(scaleX, scaleY);
+            if (optimalScale < 1) optimalScale = 1; 
+
+            // Use translate3d to trigger hardware acceleration
+            container.style.transform = `scale(${optimalScale}) translate3d(0,0,0)`;
+        }
+
+        window.addEventListener("resize", applyIntegerScale);
+        applyIntegerScale();
 
         window.addEventListener("DOMContentLoaded", () => {
             const ruffle = window.RufflePlayer.newest();
             const player = ruffle.createPlayer();
-            document.getElementById("game-container").appendChild(player);
+            container.appendChild(player);
             
             player.load({
                 url: "N.swf",
                 allowScriptAccess: true
+            }).then(() => {
+                // Final hard-lock on the rendering canvas
+                const canvas = container.querySelector('canvas');
+                if (canvas) {
+                    canvas.style.width = "800px";
+                    canvas.style.height = "600px";
+                }
             });
-
-            // Keep focus on the game so inputs don't drop
-            player.addEventListener("mousedown", () => player.focus());
         });
     </script>
 </body>
