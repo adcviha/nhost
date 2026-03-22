@@ -1,0 +1,54 @@
+name: Update Ruffle Nightly
+
+on:
+  schedule:
+    # Runs automatically every day at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Gives you a button to manually trigger it anytime
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push changes to your repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Fetch and Extract Latest Ruffle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Ask GitHub API for the latest Ruffle nightly tag
+          LATEST_TAG=$(gh api repos/ruffle-rs/ruffle/releases | jq -r '[.[] | select(.prerelease==true)][0].tag_name')
+          echo "Found latest Ruffle tag: $LATEST_TAG"
+          
+          # 2. Download the web-selfhosted zip for that tag
+          gh release download $LATEST_TAG --repo ruffle-rs/ruffle --pattern "*web-selfhosted.zip" --dir .
+          
+          # 3. Clean up old Ruffle files so old .wasm files don't pile up
+          rm -f ruffle.js ruffle.js.map *.wasm
+          
+          # 4. Unzip the new files directly into the root directory
+          unzip -o *web-selfhosted.zip -d .
+          
+          # 5. Remove the downloaded zip file
+          rm *web-selfhosted.zip
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Stage all new, modified, and deleted files
+          git add -A
+          
+          # Only commit if Ruffle actually updated today
+          if ! git diff --staged --quiet; then
+            git commit -m "Automated: Update Ruffle to $LATEST_TAG"
+            git push
+          else
+            echo "Ruffle is already up to date!"
+          fi
