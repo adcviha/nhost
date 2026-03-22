@@ -1,5 +1,9 @@
 name: Update Ruffle Nightly
 
+# Global setting to force Node 24 and silence warnings
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: '0 0 * * *'
@@ -9,28 +13,31 @@ jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-    # This env block silences the Node.js 20 deprecation warning
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      contents: write 
 
     steps:
+      # Updated to v5 to match the 2026 Node standards
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Fetch and Extract Latest Ruffle
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 1. Ask GitHub API for the latest Ruffle nightly tag
           LATEST_TAG=$(gh api repos/ruffle-rs/ruffle/releases | jq -r '[.[] | select(.prerelease==true)][0].tag_name')
           echo "Found latest Ruffle tag: $LATEST_TAG"
           
+          # 2. Download the web-selfhosted zip
           gh release download $LATEST_TAG --repo ruffle-rs/ruffle --pattern "*web-selfhosted.zip" --dir .
           
-          # Wipes all old Ruffle components
+          # 3. AGGRESSIVE CLEANUP
           rm -f ruffle.js ruffle.js.map *.wasm core.ruffle.*.js package.json LICENSE_* README.md
           
+          # 4. Unzip new files
           unzip -o *web-selfhosted.zip -d .
+          
+          # 5. Remove zip
           rm *web-selfhosted.zip
 
       - name: Commit and Push Changes
