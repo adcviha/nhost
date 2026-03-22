@@ -2,16 +2,17 @@ name: Update Ruffle Nightly
 
 on:
   schedule:
-    # Runs automatically every day at midnight UTC
     - cron: '0 0 * * *'
   workflow_dispatch:
-    # Allows you to manually click the "Run workflow" button
 
 jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Essential for the bot to push files to your repo
+      contents: write
+    # This env block silences the Node.js 20 deprecation warning
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout Repository
@@ -21,21 +22,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Ask GitHub API for the latest Ruffle nightly tag
           LATEST_TAG=$(gh api repos/ruffle-rs/ruffle/releases | jq -r '[.[] | select(.prerelease==true)][0].tag_name')
           echo "Found latest Ruffle tag: $LATEST_TAG"
           
-          # 2. Download the web-selfhosted zip for that tag
           gh release download $LATEST_TAG --repo ruffle-rs/ruffle --pattern "*web-selfhosted.zip" --dir .
           
-          # 3. AGGRESSIVE CLEANUP: This wipes all old Ruffle components 
-          # so they don't pile up or cause version mismatches.
+          # Wipes all old Ruffle components
           rm -f ruffle.js ruffle.js.map *.wasm core.ruffle.*.js package.json LICENSE_* README.md
           
-          # 4. Unzip the new files directly into the root directory
           unzip -o *web-selfhosted.zip -d .
-          
-          # 5. Remove the downloaded zip file to keep the workspace clean
           rm *web-selfhosted.zip
 
       - name: Commit and Push Changes
@@ -43,10 +38,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add all changes (including the deletions of old files)
           git add -A
           
-          # Only commit if there are actual changes
           if ! git diff --staged --quiet; then
             git commit -m "Automated: Update Ruffle to $LATEST_TAG and clean old files"
             git push
